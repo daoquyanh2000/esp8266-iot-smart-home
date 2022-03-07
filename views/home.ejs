@@ -1,0 +1,267 @@
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>SMART HOME</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Roboto+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,500;0,900;1,100;1,500;1,700;1,900&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="test.css" />
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/fontawesome.min.js" integrity="sha512-PoFg70xtc+rAkD9xsjaZwIMkhkgbl1TkoaRrgucfsct7SVy9KvTj5LtECit+ZjQ3ts+7xWzgfHOGzdolfWEgrw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	</head>
+	<body>
+		<div id="div-status">
+			<div class="header">
+				<h1>STATUS</h1>
+			</div>		
+			<div class="wrap-status">
+				<div id="div-day">
+					<i class="fa-regular fa-calendar"></i>
+					<p id="day"><%=data.date%></p>
+				</div>
+				<div id="div-time">
+					<i class="fa-regular fa-clock"></i>
+					<p id="time"><%=data.time%></p>
+				</div>
+				<div id="div-hum">
+					<i class="fa-solid fa-droplet"></i>
+					<p id="hum"><%=data.humidity%>%</p>
+				</div>
+				<div id="div-temp">
+					<i class="fa-solid fa-temperature-full"></i>
+					<p id="temp"><%=data.temperature%>°C</p>
+				</div>
+				<div id="div-light">
+					<i class="fa-regular fa-sun"></i>
+					<p id="light"><%=data.light%> lux</p>
+				</div>
+			</div>
+		</div>
+		<div class="body">
+			<div id="div-linechart">
+				<!-- <i class="fa-solid fa-chart-line" style="font-size: 80px;"></i> -->
+				<div class="charts">
+					<div class="chart-container" style="position: relative; height: 33%;">
+						<canvas height="200px"  id="chartHum"></canvas>
+					</div>
+					<div class="chart-container" style="position: relative;  height: 33%;">
+						<canvas height="200px" id="chartTemp"></canvas>
+					</div>
+					<div class="chart-container" style="position: relative;  height: 33%;">
+						<canvas height="200px" id="chartLight"></canvas> 
+					</div>
+				</div>
+				
+			</div>
+			<div id="div-control">
+				<h1>CONTROL</h1>
+				<i class="fa-regular fa-lightbulb"></i>
+				<div id="div-control-button">
+					<div class="wrap-button">
+						<div>
+							<h2>Switch 1</h2>
+							<label class="switch">
+								<input id="congtac1" type="checkbox"
+								<%=(data.redled=="on")?"checked":""%> data="redled" />
+								<span class="slider round"></span>
+							</label>
+							<p id="state1"><%=data.redled%></p>
+						</div>
+						<div>
+							<h2>Switch 2</h2>
+							<label class="switch">
+								<input id="congtac2" type="checkbox"
+								<%=(data.greenled=="on")? "checked":""%> data="greenled" />
+								<span class="slider round"></span>
+							</label>
+							<p id="state2"><%=data.greenled%></p>
+						</div>
+						<div>
+							<h2>Switch 3</h2>
+							<label class="switch">
+								<input id="congtac3" type="checkbox"
+								<%=(data.blueled=="on")?"checked":""%> data="blueled" />
+								<span class="slider round"></span>
+							</label>
+							<p id="state3"><%=data.blueled%></p>
+						</div>
+					</div>
+				</div>
+				<div id="div-linechart-display-type">
+					<h2>DISPLAY TYPE</h2>
+					<div class="button-container">
+						<form action="">
+							<label>
+								<input type="radio" data="laygiay" name="chart" checked>By second</label>
+							<label ><input type="radio" data="laygio" name="chart">By Hour</label>
+							<label ><input type="radio" data="layngay" name="chart">By Day</label>	 
+						</form>
+					</div>					
+				</div>
+				<div class="navigation">
+					<a href="history">History</a>
+				</div>
+			</div>
+		</body>
+		</div>
+
+	<!-- tao chart -->
+		<script src="mychart.js"></script>
+	<script>
+		//nhan du lieu tu socketserver va day len html
+		var socket = io();
+		const humData = [];
+		const lightData = [];
+		const tempData = [];
+		const defaultLabels = [];
+			const chartHum = new Chart(
+			document.getElementById('chartHum'),
+			generateConfig(
+				defaultLabels,
+				humData,
+				'rgb(0, 0, 255)',
+				'rgb(0, 0, 255)',
+				'Humidity chart',
+				'Humidity'
+			)
+		);
+		const chartTemp = new Chart(
+			document.getElementById('chartTemp'),
+			generateConfig(
+				defaultLabels,
+				tempData,
+				'rgb(250, 125, 125)',
+				'rgb(250, 125, 125)',
+				'Temperature chart',
+				'Temperature'
+			)
+		);
+		const chartLight = new Chart(
+			document.getElementById('chartLight'),
+			generateConfig(
+				defaultLabels,
+				lightData,
+				'rgb(255, 255, 0)',
+				'rgb(255, 255, 0)',
+				'Light chart',
+				'Light'
+			)
+		);		
+		socket.on('sensor',handleOnSensorData);
+
+
+		function handleOnSensorData (message){
+			var day = document.getElementById('day');
+			var time = document.getElementById('time');
+			var hum = document.getElementById('hum');
+			var temp = document.getElementById('temp');
+			var light = document.getElementById('light');
+			var redLedState = document.getElementById('state1');
+			var greenLedState = document.getElementById('state2');
+			var blueLedState = document.getElementById('state3');
+			var info = JSON.parse(message);
+			var date = info.date;
+			//update data to client
+			day.innerText = date.split('T')[0];
+			time.innerText = date.split('T')[1].split('Z')[0];
+			hum.innerText = info.humidity + '%';
+			temp.innerText = info.temperature + '°C';
+			light.innerText = info.light + ' lux';
+			redLedState.innerText = info.redled;
+			greenLedState.innerText = info.greenled;
+			blueLedState.innerText = info.blueled;
+			//process data for chart
+			//daySplit = date.split('T')[0];
+			//hourSplit = date.split('T')[1].split('Z')[0].split(':')[0];
+			secondSplit = date.split('T')[1].split('Z')[0].split(':')[2];
+			humData.push(info.humidity);
+			lightData.push(info.light);
+			tempData.push(info.temperature);
+			defaultLabels.push(secondSplit+'s');
+			chartHum.update()
+			chartTemp.update()
+			chartLight.update()
+		}
+		socket.on('tragio',function(result){
+			tradata(result,"tragio")
+					
+		})
+		socket.on('trangay',function(result){
+			tradata(result,"trangay")
+					
+		})
+		function tradata(result,event){
+			console.log(result);
+			let labels=[];
+			let Daylabel = result.map((row)=> row.day)
+			let Hourlabel = result.map((row)=> row.hour)
+			for (let i = 0; i < Hourlabel.length; i++) {
+				if(event =="trangay") 
+					labels[i]=  Daylabel[i] +"d";
+				else			
+					labels[i]= Hourlabel[i] + "h/"+ Daylabel[i] +"d";	
+			}
+			console.log(labels);
+			let valueHum = result.map((row)=>row.humidity)
+			let valueTemp = result.map((row)=>row.temperature)
+			let valueLight = result.map((row)=>row.light)						
+			chartHum.data.labels = labels
+			chartTemp.data.labels = labels
+			chartLight.data.labels = labels					
+			chartHum.data.datasets[0].data = valueHum;
+			chartTemp.data.datasets[0].data = valueTemp;
+			chartLight.data.datasets[0].data = valueLight;						
+			chartHum.update();
+			chartTemp.update();
+			chartLight.update();			
+		}
+	</script>
+	<script>
+		//doc trang thai nut bam va emit cho server
+		var inputs = Array.from(
+			document.querySelectorAll('input[type="checkbox"]')
+		);
+		inputs.forEach((input) => {
+			input.addEventListener('click', function (e) {
+				let textState = e.target.closest('div').querySelector('p');
+				let value = e.target.checked;
+				let ledName = e.target.getAttribute('data');
+				let state = value ? 'on' : 'off';
+				//ban trang thai den cho server
+				socket.emit('changeLedState', { ledName, state });
+			});
+		});
+		var radios = Array.from(document.querySelectorAll('input[type="radio"]'));
+
+		radios.forEach((radio) => {
+			radio.addEventListener('click',function(e){
+				let value =e.target.checked;
+				let layData = e.target.getAttribute('data');
+				if(layData == "laygiay"){
+
+					console.log(defaultLabels)
+					chartHum.data.labels = defaultLabels
+					chartHum.data.datasets[0].data = humData;
+					chartHum.update();
+					chartTemp.data.labels = defaultLabels
+					chartTemp.data.datasets[0].data = tempData;
+					chartTemp.update();
+					chartLight.data.labels = defaultLabels
+					chartLight.data.datasets[0].data = lightData ;
+					chartLight.update();				
+				}
+				else
+				socket.emit(layData)
+			})
+		}
+		)
+	</script>
+
+</html>
