@@ -20,6 +20,7 @@ app.get('/', function (req, res) {
 		}
 	);
 });
+
 app.get('/history', async function (req, res) {
 	let page = req.query.page || 1;
 	let perPage = 20;
@@ -75,6 +76,7 @@ var options = {
 	username: '',
 	password: '',
 };
+
 var msg;
 var client = mqtt.connect(options);
 var topicSensor = 'esp8266-iot/sensor';
